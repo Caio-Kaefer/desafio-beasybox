@@ -1,25 +1,30 @@
 import React from 'react';
 import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, CssBaseline } from '@mui/material';
+import { theme } from './theme/theme';
+import Header from './components/Layout/Header';
+import Home from './pages/Home';
+import Chat from './pages/Chat';
+import Sobre from './pages/Sobre';
+import SAC from './pages/SAC';
+import Produto from './pages/Produto';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Header />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/sobre" element={<Sobre />} />
+          <Route path="/sac" element={<SAC />} />
+          <Route path="/produto" element={<Produto />} />
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 
