@@ -25,12 +25,7 @@ const StyledButton = styled(Button)(({ theme }) => ({
 const Header = () => {
   const navigate = useNavigate();
 
-  const menuItems = [
-    { label: 'Chat', path: '/chat' },
-    { label: 'Sobre Nós', path: '/sobre' },
-    { label: 'SAC', path: '/sac' },
-    { label: 'Produto', path: '/produto' }
-  ];
+  const menuItems = [{ label: 'Chat', path: '/chat' }, { label: 'Sobre Nós', path: '/sobre' }, { label: 'SAC', path: '/sac' }, { label: 'Produto', path: '/produto' }];
 
   return (
     <StyledAppBar position="static">
@@ -54,21 +49,29 @@ const Header = () => {
             </StyledButton>
           ))}
         </Box>
-        <Typography 
-          variant="h6" 
-          component="div" 
+        <Box 
           sx={{ 
             cursor: 'pointer',
             position: 'absolute',
             left: '50%',
             transform: 'translateX(-50%)',
-            fontWeight: 500,
-            fontSize: '1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1
           }} 
           onClick={() => navigate('/')}
         >
-          Taurus Chat
-        </Typography>
+          <Typography 
+            variant="h6" 
+            component="div" 
+            sx={{ 
+              fontWeight: 500,
+              fontSize: '1.25rem',
+            }} 
+          >
+            <Box component="span" sx={{ color: '#FF6B00' }}>TAURUS</Box> Chat
+          </Typography>
+        </Box>
       </Toolbar>
     </StyledAppBar>
   );

@@ -3,7 +3,9 @@ import { styled } from '@mui/material/styles';
 import SendIcon from '@mui/icons-material/Send';
 import ChatIcon from '@mui/icons-material/Chat';
 import AddIcon from '@mui/icons-material/Add';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { aiService } from '../services/aiService';
 
 const StyledContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(4),
@@ -103,38 +105,141 @@ interface Chat {
   messages: Message[];
 }
 
+const MAX_MESSAGE_LENGTH = 500; 
+const MIN_MESSAGE_LENGTH = 2;   
+
+const COMPANY_CONTEXT = {
+  name: 'Taurus',
+  description: 'Especialista em soluções para automação e otimização de processos empresariais',
+  expertise: ['Automação de Processos', 'Análise de Dados', 'Consultoria'],
+  tone: 'direto e profissional',
+  language: 'pt-BR',
+  responseStyle: 'objetivo'
+};
+
 const Chat = () => {
   const [message, setMessage] = useState('');
-  const [chats, setChats] = useState<Chat[]>([
-    { id: 1, title: 'Novo Chat', messages: [] }
-  ]);
-  const [activeChat, setActiveChat] = useState<number>(1);
+  const [chats, setChats] = useState<Chat[]>(() => {
+    const savedChats = localStorage.getItem('chats');
+    return savedChats ? JSON.parse(savedChats) : [{ id: 1, title: 'Chat 1', messages: [] }];
+  });
+  const [activeChat, setActiveChat] = useState<number>(() => {
+    const savedActiveChat = localStorage.getItem('activeChat');
+    return savedActiveChat ? parseInt(savedActiveChat) : 1;
+  });
 
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
+  // Salvar chats no localStorage sempre que houver mudanças
+  useEffect(() => {
+    localStorage.setItem('chats', JSON.stringify(chats));
+  }, [chats]);
 
+  // Salvar chat ativo no localStorage
+  useEffect(() => {
+    localStorage.setItem('activeChat', activeChat.toString());
+  }, [activeChat]);
+
+  const handleSendMessage = async () => {
+    if (message.length < MIN_MESSAGE_LENGTH) {
+      setChats(prevChats => {
+        return prevChats.map(chat => {
+          if (chat.id === activeChat) {
+            return {
+              ...chat,
+              messages: [...chat.messages, { 
+                id: Date.now(), 
+                text: 'Por favor, digite uma mensagem mais longa.', 
+                isUser: false 
+              }]
+            };
+          }
+          return chat;
+        });
+      });
+      return;
+    }
+
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      setChats(prevChats => {
+        return prevChats.map(chat => {
+          if (chat.id === activeChat) {
+            return {
+              ...chat,
+              messages: [...chat.messages, { 
+                id: Date.now(), 
+                text: `Por favor, limite sua mensagem a ${MAX_MESSAGE_LENGTH} caracteres.`, 
+                isUser: false 
+              }]
+            };
+          }
+          return chat;
+        });
+      });
+      return;
+    }
+
+    const userMessage = { id: Date.now(), text: message, isUser: true };
+    
     setChats(prevChats => {
       return prevChats.map(chat => {
         if (chat.id === activeChat) {
           return {
             ...chat,
-            messages: [
-              ...chat.messages,
-              { id: Date.now(), text: message, isUser: true },
-              { id: Date.now() + 1, text: 'Esta é uma resposta automática de exemplo.', isUser: false }
-            ]
+            messages: [...chat.messages, userMessage]
           };
         }
         return chat;
       });
     });
+    
     setMessage('');
+
+    try {
+      const aiResponse = await aiService.sendMessage(message);
+      
+      setChats(prevChats => {
+        return prevChats.map(chat => {
+          if (chat.id === activeChat) {
+            return {
+              ...chat,
+              messages: [...chat.messages, { id: Date.now(), text: aiResponse, isUser: false }]
+            };
+          }
+          return chat;
+        });
+      });
+    } catch (error) {
+      console.error('Erro:', error);
+      // Adiciona mensagem de erro ao chat
+      setChats(prevChats => {
+        return prevChats.map(chat => {
+          if (chat.id === activeChat) {
+            return {
+              ...chat,
+              messages: [...chat.messages, { 
+                id: Date.now(), 
+                text: 'Desculpe, ocorreu um erro ao processar sua mensagem.', 
+                isUser: false 
+              }]
+            };
+          }
+          return chat;
+        });
+      });
+    }
   };
 
   const handleNewChat = () => {
+    const getNextChatNumber = () => {
+      const numbers = chats.map(chat => {
+        const match = chat.title.match(/Chat (\d+)/);
+        return match ? parseInt(match[1]) : 0;
+      });
+      return Math.max(...numbers, 0) + 1;
+    };
+  
     const newChat: Chat = {
       id: Date.now(),
-      title: 'Novo Chat',
+      title: `Chat ${getNextChatNumber()}`,
       messages: []
     };
     setChats(prev => [...prev, newChat]);
@@ -142,6 +247,16 @@ const Chat = () => {
   };
 
   const currentChat = chats.find(chat => chat.id === activeChat);
+
+  const handleDeleteChat = (chatId: number) => {
+    setChats(prev => {
+      const newChats = prev.filter(chat => chat.id !== chatId);
+      if (chatId === activeChat && newChats.length > 0) {
+        setActiveChat(newChats[0].id);
+      }
+      return newChats;
+    });
+  };
 
   return (
     <StyledContainer maxWidth="xl">
@@ -155,6 +270,25 @@ const Chat = () => {
             <ListItem 
               key={chat.id}
               disablePadding
+              secondaryAction={
+                chats.length > 1 && (
+                  <IconButton 
+                    edge="end" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteChat(chat.id);
+                    }}
+                    sx={{ 
+                      color: '#fff',
+                      '&:hover': {
+                        color: '#FF6B00'
+                      }
+                    }}
+                  >
+                    <DeleteIcon sx={{ fontSize: '20px' }} />
+                  </IconButton>
+                )
+              }
             >
               <ChatListItem 
                 selected={activeChat === chat.id}
@@ -196,44 +330,42 @@ const Chat = () => {
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-            size="small"
+            inputProps={{ maxLength: MAX_MESSAGE_LENGTH }}
+            helperText={`${message.length}/${MAX_MESSAGE_LENGTH}`}
+            FormHelperTextProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
             sx={{
               '& .MuiOutlinedInput-root': {
-                backgroundColor: '#555555',
                 color: '#fff',
-                '& fieldset': {
-                  borderColor: 'rgba(255,107,0,0.2)',
-                },
-                '&:hover fieldset': {
-                  borderColor: '#FF6B00',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: '#FF6B00',
-                },
+                '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                '&:hover fieldset': { borderColor: '#FF6B00' },
+                '&.Mui-focused fieldset': { borderColor: '#FF6B00' },
               },
-              '& .MuiOutlinedInput-input::placeholder': {
-                color: 'rgba(255,255,255,0.5)',
+              '& .MuiInputAdornment-root': {
+                position: 'absolute',
+                right: '8px',
               },
+            }}
+            InputProps={{
+              endAdornment: (
+                <IconButton
+                  onClick={handleSendMessage}
+                  sx={{
+                    backgroundColor: '#FF6B00',
+                    color: '#fff',
+                    width: '35px',
+                    height: '35px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    '&:hover': { backgroundColor: '#cc5500' },
+                  }}
+                >
+                  <SendIcon sx={{ fontSize: '20px' }} />
+                </IconButton>
+              ),
             }}
           />
-          <IconButton 
-            color="primary" 
-            onClick={handleSendMessage}
-            disabled={!message.trim()}
-            sx={{ 
-              backgroundColor: '#FF6B00',
-              color: '#fff',
-              '&:hover': {
-                backgroundColor: '#e66000',
-              },
-              '&.Mui-disabled': {
-                backgroundColor: '#4A4A4A',
-                color: '#fff',
-              },
-            }}
-          >
-            <SendIcon />
-          </IconButton>
         </InputContainer>
       </ChatContainer>
     </StyledContainer>
