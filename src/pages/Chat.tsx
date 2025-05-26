@@ -6,6 +6,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { useState, useEffect } from 'react';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { aiService } from '../services/aiService';
+import { CircularProgress } from '@mui/material';
 
 const StyledContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(4),
@@ -133,11 +134,12 @@ const Chat = () => {
     localStorage.setItem('chats', JSON.stringify(chats));
   }, [chats]);
 
-  // Salvar chat ativo no localStorage
   useEffect(() => {
     localStorage.setItem('activeChat', activeChat.toString());
   }, [activeChat]);
-
+  
+  const [isLoading, setIsLoading] = useState(false);
+  
   const handleSendMessage = async () => {
     if (message.length < MIN_MESSAGE_LENGTH) {
       setChats(prevChats => {
@@ -178,7 +180,9 @@ const Chat = () => {
     }
 
     const userMessage = { id: Date.now(), text: message, isUser: true };
-    
+    setMessage('');
+    setIsLoading(true);
+
     setChats(prevChats => {
       return prevChats.map(chat => {
         if (chat.id === activeChat) {
@@ -190,12 +194,9 @@ const Chat = () => {
         return chat;
       });
     });
-    
-    setMessage('');
 
     try {
       const aiResponse = await aiService.sendMessage(message);
-      
       setChats(prevChats => {
         return prevChats.map(chat => {
           if (chat.id === activeChat) {
@@ -209,7 +210,6 @@ const Chat = () => {
       });
     } catch (error) {
       console.error('Erro:', error);
-      // Adiciona mensagem de erro ao chat
       setChats(prevChats => {
         return prevChats.map(chat => {
           if (chat.id === activeChat) {
@@ -225,6 +225,8 @@ const Chat = () => {
           return chat;
         });
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -349,6 +351,7 @@ const Chat = () => {
               endAdornment: (
                 <IconButton
                   onClick={handleSendMessage}
+                  disabled={isLoading}
                   sx={{
                     backgroundColor: '#FF6B00',
                     color: '#fff',
@@ -359,9 +362,28 @@ const Chat = () => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     '&:hover': { backgroundColor: '#cc5500' },
+                    '&.Mui-disabled': {
+                      backgroundColor: '#cc5500',
+                      opacity: 0.7
+                    },
+                    position: 'absolute',
+                    right: '8px',
+                    top: '50%',
+                    transform: 'translateY(-50%)'
                   }}
                 >
-                  <SendIcon sx={{ fontSize: '20px' }} />
+                  {isLoading ? (
+                    <CircularProgress 
+                      size={24}
+                      thickness={4}
+                      sx={{ 
+                        color: '#fff',
+                        position: 'absolute'
+                      }} 
+                    />
+                  ) : (
+                    <SendIcon sx={{ fontSize: '20px' }} />
+                  )}
                 </IconButton>
               ),
             }}
