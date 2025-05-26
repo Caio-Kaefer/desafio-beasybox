@@ -4,19 +4,31 @@ import { styled } from '@mui/material/styles';
 const StyledContainer = styled(Container)(({ theme }) => ({
   marginTop: theme.spacing(4),
   marginBottom: theme.spacing(4),
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+  },
 }));
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(4),
   backgroundColor: '#4A4A4A',
   color: '#fff',
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(2),
+  },
 }));
 
 const Sobre = () => {
   return (
     <StyledContainer maxWidth="lg">
       <StyledPaper elevation={3}>
-        <Typography variant="h4" gutterBottom>
+        <Typography 
+          variant="h4" 
+          gutterBottom 
+          sx={{
+            fontSize: { xs: '1.5rem', sm: '2rem', md: '2.125rem' },
+          }}
+        >
           Sobre Nós
         </Typography>
         <Typography variant="body1" paragraph>

@@ -15,6 +15,16 @@ const StyledContainer = styled(Container)(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(2),
   fontFamily: '"Poppins", sans-serif',
+  flexDirection: 'row',
+  padding: theme.spacing(2),
+  [theme.breakpoints.down('md')]: {
+    flexDirection: 'column',
+    height: 'auto',
+    minHeight: 'calc(100vh - 128px)',
+    padding: theme.spacing(1),
+    marginTop: theme.spacing(2),
+    marginBottom: theme.spacing(2),
+  },
 }));
 
 const SidebarContainer = styled(Paper)(({ theme }) => ({
@@ -25,34 +35,11 @@ const SidebarContainer = styled(Paper)(({ theme }) => ({
   gap: theme.spacing(2),
   backgroundColor: '#4A4A4A',
   color: '#fff',
-}));
-
-const ChatContainer = styled(Paper)(({ theme }) => ({
-  flex: 1,
-  padding: theme.spacing(2),
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100%',
-  backgroundColor: '#4A4A4A',
-  color: '#fff',
-}));
-
-const MessageContainer = styled(Box)(({ theme }) => ({
-  flex: 1,
-  overflowY: 'auto',
-  padding: theme.spacing(2),
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing(2),
-  backgroundColor: '#4A4A4A',
-}));
-
-const InputContainer = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  gap: theme.spacing(1),
-  padding: theme.spacing(2),
-  backgroundColor: '#4A4A4A',
-  borderRadius: theme.spacing(1),
+  [theme.breakpoints.down('md')]: {
+    width: '100%',
+    maxHeight: '200px',
+    overflowY: 'auto',
+  },
 }));
 
 const MessageBubble = styled(Paper)<{ isUser: boolean }>(({ theme, isUser }) => ({
@@ -63,6 +50,10 @@ const MessageBubble = styled(Paper)<{ isUser: boolean }>(({ theme, isUser }) => 
   color: '#fff',
   borderRadius: theme.spacing(2),
   boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+  [theme.breakpoints.down('sm')]: {
+    maxWidth: '90%',
+    padding: theme.spacing(1.5),
+  },
 }));
 
 const NewChatButton = styled(ListItemButton)(({ theme }) => ({
@@ -395,3 +386,38 @@ const Chat = () => {
 };
 
 export default Chat;
+
+const ChatContainer = styled(Paper)(({ theme }) => ({
+  flex: 1,
+  padding: theme.spacing(2),
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  backgroundColor: '#4A4A4A',
+  color: '#fff',
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(1),
+    height: 'calc(100vh - 350px)', // Adjusted height for mobile when sidebar is above
+    minHeight: '400px',
+  },
+}));
+
+const MessageContainer = styled(Box)(({ theme }) => ({
+  flex: 1,
+  overflowY: 'auto',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(2),
+  marginBottom: theme.spacing(2),
+  padding: theme.spacing(1),
+  [theme.breakpoints.down('sm')]: {
+    gap: theme.spacing(1.5),
+    marginBottom: theme.spacing(1),
+    padding: theme.spacing(0.5),
+  },
+}));
+
+const InputContainer = styled(Box)(({ theme }) => ({
+  width: '100%',
+  position: 'relative',
+}));

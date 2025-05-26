@@ -47,6 +47,11 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
     transform: 'translateY(-5px)',
     transition: 'transform 0.3s ease',
   },
+  [theme.breakpoints.down('sm')]: {
+    padding: theme.spacing(3),
+    margin: theme.spacing(2),
+    width: '100%',
+  },
 }));
 
 const AnimatedButton = styled(Button)(({ theme }) => ({
