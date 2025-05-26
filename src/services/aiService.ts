@@ -4,6 +4,7 @@ import { AI_CONFIG } from './config';
 class AIService {
   private genAI: GoogleGenerativeAI;
   private model: any;
+  private chatHistory: { role: string; text: string }[] = [];
 
   constructor() {
     if (!AI_CONFIG.apiKey) {
@@ -19,7 +20,12 @@ class AIService {
         throw new Error('Mensagem vazia');
       }
 
-      const contextualizedMessage = `Como um assistente da Taurus, especialista em soluções de IA para automação e otimização de processos empresariais, responda de forma profissional e amigável em português: ${message}`;
+      // Adiciona a mensagem do usuário ao histórico
+      this.chatHistory.push({ role: 'user', text: message });
+
+      const contextualizedMessage = `Você é o assistente virtual da Taurus, especialista em soluções de IA. Mantenha suas respostas diretas e objetivas em português, sem saudações repetitivas ou despedidas. Considere o histórico da conversa a seguir:\n\n${this.chatHistory
+        .map(msg => `${msg.role}: ${msg.text}`)
+        .join('\n')}\n\nResponda considerando todo o contexto acima.`;
 
       const result = await this.model.generateContent(contextualizedMessage);
       const response = await result.response;
@@ -28,6 +34,9 @@ class AIService {
       if (!text) {
         throw new Error('Resposta vazia da API');
       }
+
+      // Adiciona a resposta da IA ao histórico
+      this.chatHistory.push({ role: 'assistant', text });
 
       return text;
     } catch (error: any) {
